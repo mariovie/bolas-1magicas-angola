@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#151b2b">
+<title>Bolas Mágicas de Angola</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#111a2b;color:white;font-family:Arial,sans-serif;text-align:center}
+h1{color:#ffd34d;font-size:26px}
+header{padding:12px}
+canvas{width:100%;max-width:500px;background:#172844;border:3px solid #ffd34d;border-radius:15px;touch-action:manipulation}
+button{background:#ffd34d;color:#171717;border:0;border-radius:10px;padding:13px 20px;font-size:17px;font-weight:bold;margin:6px}
+.stats{font-size:18px;margin:10px}
+</style>
+</head>
+<body>
+<header>
+<h1>🇦🇴 Bolas Mágicas de Angola</h1>
+<p>Junta três ou mais bolas da mesma cor!</p>
+<div class="stats">Pontos: <span id="score">0</span></div>
+<button onclick="start()">Começar / Reiniciar</button>
+</header>
+<canvas id="game" width="400" height="550"></canvas>
+<p>🎯 Toca numa bola para disparar nessa direção.</p>
+<p>🇦🇴 As cores de Angola acompanham a tua aventura!</p>
+
+<script>
+const c=document.getElementById('game');
+const x=c.getContext('2d');
+const colors=['#e83e50','#ffd34d','#35c77b','#42a5f5','#b388ff'];
+let balls=[],score=0,active=false,shooter=0;
+const R=15;
+
+function start(){
+ balls=[];score=0;active=true;
+ document.getElementById('score').textContent=score;
+ for(let row=0;row<6;row++){
+  for(let col=0;col<11;col++){
+   if(Math.random()>.12)balls.push({
+    x:22+col*35+(row%2)*17,
+    y:30+row*34,
+    color:colors[Math.floor(Math.random()*colors.length)]
+   });
+  }
+ }
+ draw();
+}
+function drawBall(b){
+ let g=x.createRadialGradient(b.x-5,b.y-6,2,b.x,b.y,R);
+ g.addColorStop(0,'white');g.addColorStop(.3,b.color);g.addColorStop(1,'#172033');
+ x.fillStyle=g;x.beginPath();x.arc(b.x,b.y,R,0,Math.PI*2);x.fill();
+ x.strokeStyle='#ffffff99';x.stroke();
+}
+function draw(){
+ x.clearRect(0,0,400,550);
+ x.fillStyle='#172844';x.fillRect(0,0,400,550);
+ x.fillStyle='#d73542';x.fillRect(0,490,400,60);
+ x.fillStyle='#171717';x.fillRect(0,520,400,30);
+ x.fillStyle='#ffd34d';x.font='bold 16px Arial';x.textAlign='center';
+ x.fillText('ANGOLA ★',200,540);
+ balls.forEach(drawBall);
+ x.fillStyle='#ffd34d';x.beginPath();x.arc(200,470,R,0,Math.PI*2);x.fill();
+ x.fillStyle='white';x.font='13px Arial';x.fillText('DISPARADOR',200,510);
+}
+function shoot(px,py){
+ if(!active)return;
+ let col=colors[Math.floor(Math.random()*colors.length)];
+ let nearest=null,dist=Infinity;
+ balls.forEach(b=>{
+  let d=Math.hypot(b.x-px,b.y-py);
+  if(d<dist){dist=d;nearest=b;}
+ });
+ if(nearest){
+  col=nearest.color;
+  balls.push({x:Math.max(R,Math.min(400-R,px)),y:Math.max(R,Math.min(480,py)),color:col});
+  let group=[balls.length-1],changed=true;
+  while(changed){
+   changed=false;
+   for(let i=0;i<balls.length;i++){
+    if(group.includes(i)||balls[i].color!==col)continue;
+    if(group.some(j=>Math.hypot(balls[i].x-balls[j].x,balls[i].y-balls[j].y)<39)){
+     group.push(i);changed=true;
+    }
+   }
+  }
+  if(group.length>=3){
+   group.sort((a,b)=>b-a).forEach(i=>balls.splice(i,1));
+   score+=group.length*10;
+   document.getElementById('score').textContent=score;
+  }
+ }
+ if(balls.length===0){
+  alert('Parabéns! Venceste! 🇦🇴');
+  active=false;
+ }
+ draw();
+}
+c.addEventListener('pointerdown',e=>{
+ const r=c.getBoundingClientRect();
+ shoot((e.clientX-r.left)*400/r.width,(e.clientY-r.top)*550/r.height);
+});
+start();
+</script>
+</body>
+</html>
